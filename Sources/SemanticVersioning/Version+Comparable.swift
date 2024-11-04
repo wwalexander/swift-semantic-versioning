@@ -10,7 +10,7 @@ extension Version: Comparable {
             case let (lhs, rhs) where lhs.count < rhs.count: true
             case let (lhs, rhs) where lhs.count == rhs.count:
                 zip(lhs, rhs).contains { lhs, rhs in
-                    switch (Int(lhs), Int(rhs)) {
+                    switch (UInt(lhs), UInt(rhs)) {
                     case (.some, .none): true
                     case let (.some(lhs), .some(rhs)): lhs < rhs
                     case (.none, .none): lhs < rhs

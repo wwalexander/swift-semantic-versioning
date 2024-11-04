@@ -72,7 +72,6 @@ extension Version {
     }
 }
 
-
 fileprivate extension Character {
     var isDigit: Bool { isWholeNumber }
     var isPositiveDigit: Bool { isDigit && self != "0" }
