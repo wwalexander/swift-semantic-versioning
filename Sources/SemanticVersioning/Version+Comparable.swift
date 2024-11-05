@@ -1,24 +1,40 @@
 extension Version: Comparable {
     public static func < (lhs: Self, rhs: Self) -> Bool {
-        switch (lhs, rhs) {
-        case
-            let (lhs, rhs) where lhs.major < rhs.major,
-            let (lhs, rhs) where lhs.minor < rhs.minor,
-            let (lhs, rhs) where lhs.patch < rhs.patch: true
-        default:
-            switch (lhs.prereleaseIdentifiers, rhs.prereleaseIdentifiers) {
-            case let (lhs, rhs) where lhs.count < rhs.count: true
-            case let (lhs, rhs) where lhs.count == rhs.count:
-                zip(lhs, rhs).contains { lhs, rhs in
-                    switch (UInt(lhs), UInt(rhs)) {
-                    case (.some, .none): true
-                    case let (.some(lhs), .some(rhs)): lhs < rhs
-                    case (.none, .none): lhs < rhs
-                    default: false
-                    }
-                }
-            default: false
+        for keyPath in [\Self.major, \Self.minor, \Self.patch] {
+            let lhs = lhs[keyPath: keyPath]
+            let rhs = rhs[keyPath: keyPath]
+
+            if lhs != rhs {
+                return lhs < rhs
             }
         }
+
+        let lhs = lhs.prereleaseIdentifiers
+        let rhs = rhs.prereleaseIdentifiers
+
+        switch (lhs.count, rhs.count) {
+        case (0, 0...): return false
+        case (1..., 0): return true
+        default: break
+        }
+
+        for (lhs, rhs) in zip(lhs, rhs) {
+            switch (UInt(lhs), UInt(rhs)) {
+            case (.none, .none):
+                if lhs != rhs {
+                    return lhs < rhs
+                }
+            case let (.some(lhs), .some(rhs)):
+                if lhs != rhs {
+                    return lhs < rhs
+                }
+            case (.some, .none):
+                return true
+            case (.none, .some):
+                return false
+            }
+        }
+
+        return lhs.count < rhs.count
     }
 }

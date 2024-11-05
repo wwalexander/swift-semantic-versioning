@@ -1,4 +1,6 @@
-public struct Version: Sendable {
+import Parsing
+
+public struct Version: Sendable, Equatable {
     public let major: Int
     public let minor: Int
     public let patch: Int
@@ -19,6 +21,3 @@ public struct Version: Sendable {
         self.buildMetadataIdentifiers = buildMetadataIdentifiers
     }
 }
-
-extension Version: Equatable {}
-
