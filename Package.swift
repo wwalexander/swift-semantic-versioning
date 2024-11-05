@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "SemanticVersioning",
+    name: "swift-semantic-versioning",
     platforms: [
         .macOS(.v10_15),
         .macCatalyst(.v13),
