@@ -1,6 +1,5 @@
 import Testing
 @testable import SemanticVersioning
-import Parsing
 
 @Test(arguments: [
     "1.9.0": Version(1, 9, 0),
@@ -19,16 +18,15 @@ import Parsing
     "2.0.0": Version(2, 0, 0),
     "2.1.0": Version(2, 1, 0),
     "2.1.1": Version(2, 1, 1),
-    "1.0.0-alpha": Version(1, 0, 0, prereleaseIdentifiers: ["alpha"]),
-    "1.0.0-alpha.1": Version(1, 0, 0, prereleaseIdentifiers: ["alpha.1"]),
-    "1.0.0-alpha.beta": Version(1, 0, 0, prereleaseIdentifiers: ["alpha.beta"]),
+    "1.0.0-alpha.beta": Version(1, 0, 0, prereleaseIdentifiers: ["alpha", "beta"]),
     "1.0.0-beta": Version(1, 0, 0, prereleaseIdentifiers: ["beta"]),
-    "1.0.0-beta.2": Version(1, 0, 0, prereleaseIdentifiers: ["beta.2"]),
-    "1.0.0-beta.11": Version(1, 0, 0, prereleaseIdentifiers: ["beta.11"]),
-    "1.0.0-rc.1": Version(1, 0, 0, prereleaseIdentifiers: ["rc.1"]),
+    "1.0.0-beta.2": Version(1, 0, 0, prereleaseIdentifiers: ["beta", "2"]),
+    "1.0.0-beta.11": Version(1, 0, 0, prereleaseIdentifiers: ["beta", "11"]),
+    "1.0.0-rc.1": Version(1, 0, 0, prereleaseIdentifiers: ["rc", "1"]),
 ])
-func testParser(input: String, output: Version) throws {
-    try #expect(Version.parser().parse(input) == output)
+func testLosslessStringConvertible(description: String, version: Version) throws {
+    #expect(Version(description) == version)
+    #expect(version.description == description)
 }
 
 @Test(arguments: [
@@ -51,5 +49,4 @@ func testParser(input: String, output: Version) throws {
 ] as [(Version, Version)])
 func testComparable(lhs: Version, rhs: Version) {
     #expect(lhs < rhs)
-
 }

@@ -1,5 +1,3 @@
-import Parsing
-
 public struct Version: Sendable, Equatable {
     public let major: Int
     public let minor: Int

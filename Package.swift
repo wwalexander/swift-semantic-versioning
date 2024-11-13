@@ -5,9 +5,7 @@ import PackageDescription
 let package = Package(
     name: "swift-semantic-versioning",
     platforms: [
-        .macOS(.v10_15),
-        .macCatalyst(.v13),
-        .iOS(.v13),
+        .macOS(.v13),
     ],
     products: [
         .library(
@@ -15,22 +13,8 @@ let package = Package(
             targets: ["SemanticVersioning"]
         ),
     ],
-    dependencies: [
-        .package(
-            url: "https://github.com/pointfreeco/swift-parsing",
-            .upToNextMajor(from: "0.13.0")
-        ),
-    ],
     targets: [
-        .target(
-            name: "SemanticVersioning",
-            dependencies: [
-                .product(
-                    name: "Parsing",
-                    package: "swift-parsing"
-                ),
-            ]
-        ),
+        .target(name: "SemanticVersioning"),
         .testTarget(
             name: "SemanticVersioningTests",
             dependencies: ["SemanticVersioning"]
