@@ -2,11 +2,11 @@ import RegexBuilder
 
 extension Version: LosslessStringConvertible {
     public init?(_ description: String) {
-        let letter: CharacterClass = "A"..."z"
-        let positiveDigit: CharacterClass = "1"..."9"
-        let digit: CharacterClass = "0"..."9"
-        let nonDigit: CharacterClass = letter.union("-"..."-")
-        let identifierCharacter: CharacterClass = digit.union(nonDigit)
+        let letter = "A"..."z"
+        let positiveDigit = "1"..."9"
+        let digit = "0"..."9"
+        let nonDigit = letter.union(.anyOf("-"))
+        let identifierCharacter = digit.union(nonDigit)
 
         let numericIdentifier = ChoiceOf {
             "0"
@@ -56,9 +56,17 @@ extension Version: LosslessStringConvertible {
             $0.split(separator: ".").map(String.init)
         }
 
-        let major = TryCapture(numericIdentifier) { Int(String($0)) }
-        let minor = TryCapture(numericIdentifier) { Int(String($0)) }
-        let patch = TryCapture(numericIdentifier) { Int(String($0)) }
+        let major = TryCapture(numericIdentifier) {
+            Int(String($0))
+        }
+
+        let minor = TryCapture(numericIdentifier) {
+            Int(String($0))
+        }
+
+        let patch = TryCapture(numericIdentifier) {
+            Int(String($0))
+        }
 
         let versionCore = Regex {
             major
