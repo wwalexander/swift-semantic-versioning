@@ -6,6 +6,10 @@ let package = Package(
     name: "swift-semantic-versioning",
     platforms: [
         .macOS(.v13),
+        .macCatalyst(.v16),
+        .iOS(.v16),
+        .tvOS(.v16),
+        .watchOS(.v9),
     ],
     products: [
         .library(
