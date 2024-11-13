@@ -1,141 +1,97 @@
 import RegexBuilder
 
-extension Version: CustomStringConvertible {
-    public var description: String {
-        var description = "\(major).\(minor).\(patch)"
-
-        if !prereleaseIdentifiers.isEmpty {
-            description += "-\(prereleaseIdentifiers.joined(separator: "."))"
-        }
-
-        if !buildMetadataIdentifiers.isEmpty {
-            description += "+\(buildMetadataIdentifiers.joined(separator: "."))"
-        }
-
-        return description
-    }
-}
-
 extension Version: LosslessStringConvertible {
     public init?(_ description: String) {
-        guard let match = description.wholeMatch(of: Self.validSemver) else {
+        let letter: CharacterClass = "A"..."z"
+        let positiveDigit: CharacterClass = "1"..."9"
+        let digit: CharacterClass = "0"..."9"
+        let nonDigit: CharacterClass = letter.union("-"..."-")
+        let identifierCharacter: CharacterClass = digit.union(nonDigit)
+
+        let numericIdentifier = ChoiceOf {
+            "0"
+            Regex {
+                positiveDigit
+                ZeroOrMore(digit)
+            }
+        }
+
+        let alphanumericIdentifier = Regex {
+            ZeroOrMore(identifierCharacter)
+            nonDigit
+            ZeroOrMore(identifierCharacter)
+        }
+
+        let buildIdentifier = ChoiceOf {
+            OneOrMore(digit)
+            alphanumericIdentifier
+        }
+
+        let prereleaseIdentifier = ChoiceOf {
+            numericIdentifier
+            alphanumericIdentifier
+        }
+
+        let dotSeparatedPrereleaseIdentifiers = Regex {
+            prereleaseIdentifier
+            ZeroOrMore {
+                "."
+                prereleaseIdentifier
+            }
+        }
+
+        let dotSeparatedBuildIdentifiers = Regex {
+            buildIdentifier
+            ZeroOrMore {
+                "."
+                buildIdentifier
+            }
+        }
+
+        let build = Capture(dotSeparatedBuildIdentifiers) {
+            $0.split(separator: ".").map(String.init)
+        }
+
+        let prerelease = Capture(dotSeparatedPrereleaseIdentifiers) {
+            $0.split(separator: ".").map(String.init)
+        }
+
+        let major = TryCapture(numericIdentifier) { Int(String($0)) }
+        let minor = TryCapture(numericIdentifier) { Int(String($0)) }
+        let patch = TryCapture(numericIdentifier) { Int(String($0)) }
+
+        let versionCore = Regex {
+            major
+            "."
+            minor
+            "."
+            patch
+        }
+
+        let validSemver = Regex {
+            Anchor.startOfLine
+            versionCore
+            Optionally {
+                "-"
+                prerelease
+            }
+            Optionally {
+                "+"
+                build
+            }
+            Anchor.endOfLine
+        }
+
+        guard let match = description.wholeMatch(of: validSemver) else {
             return nil
         }
 
-        let (_, major, minor, patch, prereleaseIdentifiers, buildMetadataIdentifiers) = match.output
-
         self.init(
-            major,
-            minor,
-            patch,
-            prereleaseIdentifiers: prereleaseIdentifiers ?? [],
-            buildMetadataIdentifiers: buildMetadataIdentifiers ?? []
+            match.output.1,
+            match.output.2,
+            match.output.3,
+            prereleaseIdentifiers: match.output.4 ?? [],
+            buildMetadataIdentifiers: match.output.5 ?? []
         )
     }
-}
-
-fileprivate extension Version {
-    @RegexComponentBuilder
-    static var validSemver: Regex<(Substring, Int, Int, Int, [String]?, [String]?)> {
-        Anchor.startOfLine
-        versionCore
-        Optionally {
-            "-"
-            prerelease
-        }
-        Optionally {
-            "+"
-            build
-        }
-        Anchor.endOfLine
-    }
-
-    @RegexComponentBuilder
-    static var versionCore: Regex<(Substring, Int, Int, Int)> {
-        major
-        "."
-        minor
-        "."
-        patch
-    }
-
-    static var major: TryCapture<(Substring, Int)> {
-        TryCapture(numericIdentifier) { Int(String($0)) }
-    }
-
-    static var minor: TryCapture<(Substring, Int)> {
-        TryCapture(numericIdentifier) {
-            Int(String($0))
-        }
-    }
-
-    static var patch: TryCapture<(Substring, Int)> {
-        TryCapture(numericIdentifier) {
-            Int(String($0))
-        }
-    }
-
-    static var prerelease: Capture<(Substring, [String])> {
-        Capture(dotSeparatedPrereleaseIdentifiers) {
-            $0.split(separator: ".").map(String.init)
-        }
-    }
-
-    @RegexComponentBuilder
-    static var dotSeparatedPrereleaseIdentifiers: Regex<Substring> {
-        prereleaseIdentifier
-        ZeroOrMore {
-            "."
-            prereleaseIdentifier
-        }
-    }
-
-    static var build: Capture<(Substring, [String])> {
-        Capture(dotSeparatedBuildIdentifiers) {
-            $0.split(separator: ".").map(String.init)
-        }
-    }
-
-    @RegexComponentBuilder
-    static var dotSeparatedBuildIdentifiers: Regex<Substring> {
-        buildIdentifier
-        ZeroOrMore {
-            "."
-            buildIdentifier
-        }
-    }
-
-    @AlternationBuilder
-    static var prereleaseIdentifier: ChoiceOf<Substring> {
-        numericIdentifier
-        alphanumericIdentifier
-    }
-
-    @AlternationBuilder
-    static var buildIdentifier: ChoiceOf<Substring> {
-        OneOrMore(digit)
-        alphanumericIdentifier
-    }
-
-    @RegexComponentBuilder
-    static var alphanumericIdentifier: Regex<Substring> {
-        ZeroOrMore(identifierCharacter)
-        nonDigit
-        ZeroOrMore(identifierCharacter)
-    }
-
-    @AlternationBuilder
-    static var numericIdentifier: ChoiceOf<Substring> {
-        "0"
-        Regex {
-            positiveDigit
-            ZeroOrMore(digit)
-        }
-    }
-
-    static var identifierCharacter: CharacterClass { digit.union(nonDigit) }
-    static var nonDigit: CharacterClass { letter.union("-"..."-")}
-    static var digit: CharacterClass { "0"..."9" }
-    static var positiveDigit: CharacterClass { "1"..."9" }
-    static var letter: CharacterClass { "A"..."z" }
 }
